@@ -114,6 +114,36 @@ app.post('/verify',async(req,res)=>{
     return res.status(500).json({message:"'server error '",err})
    }
 })  
+app.patch('/update',async(req,res)=>{
+   try{
+    const {email,name,password}=req.body;
+   if(!email || !name){
+    return res.status(400).json({message:"'both email and  name fields required'"})
+   }
+
+    const existingUser =await userModel.findOne({email})
+    if(! existingUser){
+        return res.status(400).json({message:"'user not found'"})
+    }
+   
+    
+    if(!name==existingUser.name){
+        return res.status(400).json({message:"'your name is invalid'"})
+    }
+   
+     const salt=bcrypt.genSaltSync(10);
+     const hashPassword=bcrypt.hashSync(password,salt)
+    
+    const user=await userModel.findByIdAndUpdate(existingUser._id,{password:hashPassword})
+    
+
+    const token =jwt.sign({id:existingUser._id},secret_key,{expiresIn:'1m'})
+
+    return res.status(200).json({message:"'user successfully update'",user,token})
+   }catch(err){
+    return res.status(500).json({message:"'server error '",err})
+   }
+})  
 
 app.listen(port,()=>{console.log("server run this port ",port)})
 
