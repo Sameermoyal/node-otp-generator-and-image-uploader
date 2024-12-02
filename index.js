@@ -165,16 +165,16 @@ app.post('/upload',async(req,res)=>{
 })
 app.post('/verifyToken',async(req,res)=>{
     try{    
-          const tokenVal =req.headers.authorization;
+          const token =req.headers.authorization;
           if(!token){
-            return res.status(400).json({message:"'not token  provided '",imageurl:result.secure_url})
+            return res.status(400).json({message:"'not token  provided '"})
 
           }
-          const splitToken =tokenVal.split(" ")[1]
+          const splitToken =token.split(" ")[1]
           const decode =jwt.verify(splitToken,secret_key)
           console.log("decode>>>>",decode)
           if(!decode){
-            return res.status(400).json({message:"'invalid token  '",imageurl:result.secure_url})
+            return res.status(400).json({message:"'invalid token  '"})
 
           }
           const user=await userModel.findById(decode.id);
