@@ -163,3 +163,29 @@ app.post('/upload',async(req,res)=>{
         return res.status(500).json({message:"'server error '",error})
     }
 })
+app.post('/verifyToken',async(req,res)=>{
+    try{    
+          const tokenVal =req.headers.authorization;
+          if(!token){
+            return res.status(400).json({message:"'not token  provided '",imageurl:result.secure_url})
+
+          }
+          const splitToken =tokenVal.split(" ")[1]
+          const decode =jwt.verify(splitToken,secret_key)
+          console.log("decode>>>>",decode)
+          if(!decode){
+            return res.status(400).json({message:"'invalid token  '",imageurl:result.secure_url})
+
+          }
+          const user=await userModel.findById(decode.id);
+          if(!user){
+              return res.status(401).json({message:'User NOt found'})
+          }
+          
+       
+               return res.status(200).json({message:"'authentication successfully '"})
+
+    }catch(error){
+        return res.status(500).json({message:"'server error '",error})
+    }
+})
