@@ -1,4 +1,3 @@
-//bismillah 
 const express =require('express')
 const mongoose =require('mongoose')
 const bcrypt =require('bcrypt')
@@ -145,8 +144,6 @@ app.patch('/update',async(req,res)=>{
    }
 })  
 
-app.listen(port,()=>{console.log("server run this port ",port)})
-
 
 app.post('/upload',async(req,res)=>{
     try{
@@ -189,3 +186,71 @@ app.post('/verifyToken',async(req,res)=>{
         return res.status(500).json({message:"'server error '",error})
     }
 })
+
+
+
+const loginCountSchema=new mongoose.Schema({
+   user:{
+    type:mongoose.Schema.Types.ObjectId,
+    ref:'user',
+    required:true
+   },
+   loginCount:{
+    type:Number,
+    default:0
+   }
+})
+
+
+const loginCountModel =mongoose.model('loginCount',loginCountSchema)
+
+app.post('/register',async(req,res)=>{
+    try{
+        const{name,email,password}=req.body;
+
+    if(!name || !email || !password){
+        res.status(400).json({message:"all fields name,email, password required"})
+    }
+    
+    const newUser = userModel({name,email,password})
+    await newUser.save();
+    
+    const newLoginUser= loginCountModel({user:newUser._id})
+    await newLoginUser.save()
+
+    res.status(200).json({message:"user successfully register",newUser,newLoginUser})
+  }catch(error){
+        res.status(500).json({message:"error to newUser register ",error})
+    }
+})
+
+app.post('/userLogin',async(req,res)=>{
+    const{email,password}=req.body;
+    if(!email){
+        res.status(400).json({message:"email required"})
+    }
+    const user=await userModel.findOne({email});
+    if (!user) {
+        return res.status(400).json({ message: 'User not found' });
+      }
+    const dbPassword=user.password;
+
+    if(password != dbPassword){
+        res.status(400).json({message:"password invalid"})
+    }
+    const loginCounts=await loginCountModel.findOne({user:user._id})
+    loginCounts.loginCount+=1;
+    await loginCounts.save()
+
+    res.status(200).json({message:"login successfully",loginCount:loginCounts.loginCount})
+})
+
+
+app.get("/getAll",async(req,res)=>{
+   try{const users=await loginCountModel.find().populate('user')
+
+   res.status(200).json(users)}catch(error){res.status(500).json({message:"error >>>",error})}
+})
+
+
+app.listen(port,()=>{console.log("server run this port ",port)})
